@@ -1,38 +1,30 @@
-"use client";
+import Link from "next/link";
 
-import { createClient } from "@/lib/supabase/client";
-
-export default function LoginPage() {
-  const supabase = createClient();
-
-  async function signInWithGitHub() {
-    const redirectTo =
-      (typeof window !== "undefined" ? window.location.origin : "") + "/auth/callback";
-    await supabase.auth.signInWithOAuth({
-      provider: "github",
-      options: {
-        redirectTo,
-        scopes: "read:user public_repo",
-      },
-    });
-  }
-
+export default function HomePage() {
   return (
-    <main className="wrap" style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div className="card" style={{ maxWidth: 420, width: "100%", textAlign: "center" }}>
-        <div className="mono" style={{ color: "var(--signal)", fontSize: 13, marginBottom: 16 }}>
-          تسجيل الدخول
+    <main>
+      <header style={{ borderBottom: "1px solid var(--line)", padding: "16px 0" }}>
+        <div className="wrap" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ fontWeight: 700, fontSize: 19 }}>لاقط</div>
+          <div style={{ display: "flex", gap: 10 }}>
+            <Link href="/discover" className="btn btn-ghost">اكتشف مطورين</Link>
+            <Link href="/login" className="btn btn-signal">سجّل دخول</Link>
+          </div>
         </div>
-        <h1 style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 24, marginBottom: 12 }}>
-          اربط حسابك على لاقط
+      </header>
+
+      <section className="wrap" style={{ padding: "80px 0 60px", maxWidth: 720 }}>
+        <h1 style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "clamp(32px,5vw,50px)", lineHeight: 1.2, marginBottom: 22 }}>
+          فيه إشارة وسط الضوضاء. إحنا بنلقطها.
         </h1>
-        <p style={{ color: "var(--ink-soft)", fontSize: 14.5, marginBottom: 28 }}>
-          هنستخدم حساب GitHub بتاعك بس عشان نحلل مشاريعك العامة. مش هنلمس أي كود خاص.
+        <p style={{ color: "var(--ink-soft)", fontSize: 18, lineHeight: 1.75, marginBottom: 32 }}>
+          لاقط بيحلل مشاريع وكود المطورين الشباب فعليًا — مش بس السيرة الذاتية — ويوصّل المواهب الحقيقية للشركات اللي بتدور عليها.
         </p>
-        <button onClick={signInWithGitHub} className="btn btn-signal" style={{ width: "100%", justifyContent: "center" }}>
-          سجّل دخول بحساب GitHub
-        </button>
-      </div>
+        <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
+          <Link href="/login" className="btn btn-signal">سجّل كمطوّر</Link>
+          <Link href="/discover" className="btn btn-ghost">استكشف كشركة</Link>
+        </div>
+      </section>
     </main>
   );
 }
