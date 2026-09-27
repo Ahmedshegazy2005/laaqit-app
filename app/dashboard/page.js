@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import AnalyzeButton from "./AnalyzeButton";
 import NavBar from "../components/NavBar";
@@ -84,8 +85,13 @@ export default async function DashboardPage() {
               </p>
             )}
 
-            <div style={{ marginTop: 24 }}>
+            <div style={{ marginTop: 24, display: "flex", gap: 12, flexWrap: "wrap" }}>
               <AnalyzeButton />
+              {profile?.github_username && (
+                <Link href={`/u/${profile.github_username}`} className="btn btn-scout" target="_blank">
+                  شارك بطاقتك 🔗
+                </Link>
+              )}
             </div>
           </div>
         )}
