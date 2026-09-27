@@ -30,11 +30,12 @@ export default function NavBar() {
 
   return (
     <header style={{ borderBottom: "1px solid var(--line)", padding: "16px 0" }}>
-      <div className="wrap" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div className="wrap" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
         <Link href="/" style={{ fontWeight: 700, fontSize: 19, textDecoration: "none", color: "var(--ink)" }}>
           لاقط
         </Link>
-        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <Link href="/try" className="btn btn-ghost">جرّب بدون تسجيل</Link>
           <Link href="/discover" className="btn btn-ghost">اكتشف مطورين</Link>
           {!loading && user && (
             <Link href="/dashboard" className="btn btn-ghost">لوحتي</Link>
