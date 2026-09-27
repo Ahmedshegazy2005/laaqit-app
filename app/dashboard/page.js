@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import AnalyzeButton from "./AnalyzeButton";
 import NavBar from "../components/NavBar";
 
 const LABELS = {
@@ -54,9 +53,9 @@ export default async function DashboardPage() {
               لسه ما حللناش مشاريعك
             </h2>
             <p style={{ color: "var(--ink-soft)", fontSize: 14.5, marginBottom: 22 }}>
-              دوس على الزرار وهنقرا مشاريعك العامة على GitHub ونبني بطاقة مهارات حقيقية ليك.
+              اختار مشروع من مشاريعك على GitHub وهنحلله بالذكاء الاصطناعي ونبني بطاقة مهارات حقيقية ليك.
             </p>
-            <AnalyzeButton />
+            <Link href="/dashboard/select-repo" className="btn btn-signal">اختار مشروع تحلله</Link>
           </div>
         )}
 
@@ -86,7 +85,7 @@ export default async function DashboardPage() {
             )}
 
             <div style={{ marginTop: 24, display: "flex", gap: 12, flexWrap: "wrap" }}>
-              <AnalyzeButton />
+              <Link href="/dashboard/select-repo" className="btn btn-signal">حلّل مشروع تاني</Link>
               {profile?.github_username && (
                 <Link href={`/u/${profile.github_username}`} className="btn btn-scout" target="_blank">
                   شارك بطاقتك 🔗
