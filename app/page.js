@@ -7,15 +7,18 @@ export default function HomePage() {
       <NavBar />
 
       <section className="wrap" style={{ padding: "80px 0 60px", maxWidth: 720 }}>
+        <div className="mono" style={{ color: "var(--signal)", fontSize: 13, marginBottom: 18 }}>
+          مجاني تمامًا · بدون بطاقة ائتمان
+        </div>
         <h1 style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "clamp(32px,5vw,50px)", lineHeight: 1.2, marginBottom: 22 }}>
-          فيه إشارة وسط الضوضاء. إحنا بنلقطها.
+          إيه مستواك البرمجي الحقيقي؟
         </h1>
         <p style={{ color: "var(--ink-soft)", fontSize: 18, lineHeight: 1.75, marginBottom: 32 }}>
-          لاقط بيحلل مشاريع وكود المطورين الشباب فعليًا — مش بس السيرة الذاتية — ويوصّل المواهب الحقيقية للشركات اللي بتدور عليها.
+          اربط GitHub بتاعك، وهنحلل مشاريعك الفعلية بالذكاء الاصطناعي — جودة الكود، بنية المشروع، ونقاط التطوير — ونطلعلك بطاقة مهارات حقيقية تقدر تشاركها مع أي حد.
         </p>
         <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
-          <Link href="/login" className="btn btn-signal">سجّل كمطوّر</Link>
-          <Link href="/discover" className="btn btn-ghost">استكشف كشركة</Link>
+          <Link href="/login" className="btn btn-signal">حلّل مهاراتك مجانًا</Link>
+          <Link href="/discover" className="btn btn-ghost">شوف نماذج من المطورين</Link>
         </div>
       </section>
     </main>
