@@ -17,8 +17,8 @@ export default function HomePage() {
           اربط GitHub بتاعك، وهنحلل مشاريعك الفعلية بالذكاء الاصطناعي — جودة الكود، بنية المشروع، ونقاط التطوير — ونطلعلك بطاقة مهارات حقيقية تقدر تشاركها مع أي حد.
         </p>
         <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
-          <Link href="/login" className="btn btn-signal">حلّل مهاراتك مجانًا</Link>
-          <Link href="/discover" className="btn btn-ghost">شوف نماذج من المطورين</Link>
+          <Link href="/try" className="btn btn-signal">جرّب دلوقتي من غير تسجيل</Link>
+          <Link href="/login" className="btn btn-ghost">سجّل بحساب GitHub</Link>
         </div>
       </section>
     </main>
