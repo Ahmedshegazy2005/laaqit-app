@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 
-// Pulls up to 3 of the user's most-recently-updated public repos,
-// grabs their README + top-level file listing, and asks Gemini to
-// score the developer's skills. Stores the result in `skill_reports`.
-export async function POST() {
+export async function POST(request) {
   const supabase = createClient();
   const {
     data: { user },
@@ -21,23 +18,33 @@ export async function POST() {
     return NextResponse.json({ error: "مفيش حساب GitHub مربوط" }, { status: 400 });
   }
 
-  try {
-    // 1) Pull public repos (no token needed for public data — more reliable
-    //    than relying on the short-lived provider token from login)
-    const reposRes = await fetch(
-      `https://api.github.com/users/${profile.github_username}/repos?sort=updated&per_page=6`,
-      { headers: { Accept: "application/vnd.github+json" } }
-    );
-    if (!reposRes.ok) throw new Error("تعذّر جلب مشاريع GitHub");
-    const repos = (await reposRes.json())
-      .filter((r) => !r.fork)
-      .slice(0, 3);
+  const body = await request.json().catch(() => ({}));
+  const targetRepo = body.repo; // e.g. "username/reponame" — optional
 
-    if (repos.length === 0) {
-      return NextResponse.json({ error: "مفيش مشاريع عامة نقدر نحللها في حساب GitHub بتاعك" }, { status: 400 });
+  try {
+    let repos = [];
+
+    if (targetRepo) {
+      // المستخدم اختار مشروع محدد
+      const repoRes = await fetch(`https://api.github.com/repos/${targetRepo}`, {
+        headers: { Accept: "application/vnd.github+json" },
+      });
+      if (!repoRes.ok) throw new Error("تعذّر جلب المشروع المطلوب");
+      repos = [await repoRes.json()];
+    } else {
+      // سلوك احتياطي قديم: أحدث 3 مشاريع
+      const reposRes = await fetch(
+        `https://api.github.com/users/${profile.github_username}/repos?sort=updated&per_page=6`,
+        { headers: { Accept: "application/vnd.github+json" } }
+      );
+      if (!reposRes.ok) throw new Error("تعذّر جلب مشاريع GitHub");
+      repos = (await reposRes.json()).filter((r) => !r.fork).slice(0, 3);
     }
 
-    // 2) Grab README content for each repo (best-effort)
+    if (repos.length === 0) {
+      return NextResponse.json({ error: "مفيش مشاريع نقدر نحللها" }, { status: 400 });
+    }
+
     const repoSummaries = await Promise.all(
       repos.map(async (r) => {
         let readme = "";
@@ -58,11 +65,9 @@ export async function POST() {
       })
     );
 
-    // 3) Ask Gemini to score the developer based on this evidence
     const prompt = buildPrompt(profile.github_username, repoSummaries);
     const scores = await callGemini(prompt);
 
-    // 4) Store the report
     const { error: insertError } = await admin.from("skill_reports").insert({
       profile_id: user.id,
       summary: scores,
@@ -86,7 +91,7 @@ function buildPrompt(username, repos) {
     )
     .join("\n\n");
 
-  return `أنت مقيّم تقني محايد. بناءً على المشاريع دي من حساب GitHub الخاص بمطوّر اسمه ${username}، قيّم مهاراته.
+  return `أنت مقيّم تقني محايد. بناءً على المشروع/المشاريع دي من حساب GitHub الخاص بمطوّر اسمه ${username}، قيّم مهاراته.
 
 ${repoText}
 
@@ -101,7 +106,7 @@ ${repoText}
   "note": "<جملتين أو ثلاثة بالعربي تلخص نقاط القوة والضعف الرئيسية، بأسلوب بنّاء>"
 }
 
-قيّم بناءً على الأدلة المتاحة بس (الوصف وملف README وأسماء المشاريع)، وكن معتدل ومتحفظ لو الأدلة محدودة بدل ما تعطي درجات عالية بلا مبرر.`;
+قيّم بناءً على الأدلة المتاحة بس، وكن معتدل ومتحفظ لو الأدلة محدودة بدل ما تعطي درجات عالية بلا مبرر.`;
 }
 
 async function callGemini(prompt) {
