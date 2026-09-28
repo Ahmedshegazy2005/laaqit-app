@@ -12,7 +12,7 @@ export default function LoginPage() {
       provider: "github",
       options: {
         redirectTo,
-        scopes: "read:user public_repo",
+        scopes: "read:user",
       },
     });
   }
@@ -27,7 +27,7 @@ export default function LoginPage() {
           اربط حسابك على لاقط
         </h1>
         <p style={{ color: "var(--ink-soft)", fontSize: 14.5, marginBottom: 28 }}>
-          هنستخدم حساب GitHub بتاعك بس عشان نحلل مشاريعك العامة. مش هنلمس أي كود خاص.
+          هنقرا اسمك وصورتك بس من GitHub، ونحلل مشاريعك العامة. مش هنعدّل على أي حاجة ومش هنخزّن أي توكن.
         </p>
         <button onClick={signInWithGitHub} className="btn btn-signal" style={{ width: "100%", justifyContent: "center" }}>
           سجّل دخول بحساب GitHub
