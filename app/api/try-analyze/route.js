@@ -1,6 +1,24 @@
 import { NextResponse } from "next/server";
+import { createHmac } from "crypto";
+import { createAdminClient } from "@/lib/supabase/server";
 
 const MAX_CHARS = 8000;
+const PER_PERSON_DAILY_LIMIT = 5;
+const GLOBAL_DAILY_LIMIT = 300;
+
+// بصمة مشفّرة من الـ IP، مش الـ IP نفسه
+function getPersonBucket(request) {
+  const forwarded = request.headers.get("x-forwarded-for") || "";
+  const ip = forwarded.split(",")[0].trim() || "unknown";
+  const key = process.env.SUPABASE_SECRET_KEY || "fallback";
+  return "ip:" + createHmac("sha256", key).update(ip).digest("hex").slice(0, 32);
+}
+
+async function hit(admin, bucket) {
+  const { data, error } = await admin.rpc("increment_try_usage", { p_bucket: bucket });
+  if (error) throw error;
+  return data;
+}
 
 export async function POST(request) {
   const body = await request.json().catch(() => ({}));
@@ -11,12 +29,32 @@ export async function POST(request) {
   }
 
   try {
-    const prompt = buildPrompt(code);
-    const scores = await callGemini(prompt);
+    const admin = createAdminClient();
+
+    const personCount = await hit(admin, getPersonBucket(request));
+    if (personCount > PER_PERSON_DAILY_LIMIT) {
+      return NextResponse.json(
+        { error: "وصلت للحد اليومي للتجربة السريعة (5 مرات). ارجع بكرة، أو سجّل دخول وحلّل مشروع من GitHub." },
+        { status: 429 }
+      );
+    }
+
+    const globalCount = await hit(admin, "global");
+    if (globalCount > GLOBAL_DAILY_LIMIT) {
+      return NextResponse.json(
+        { error: "التجربة السريعة وصلت لحدها اليومي عند كل المستخدمين. ارجع بكرة." },
+        { status: 429 }
+      );
+    }
+
+    const scores = await callGemini(buildPrompt(code));
     return NextResponse.json({ ok: true, scores });
   } catch (e) {
     console.error(e);
-    return NextResponse.json({ error: e.message || "حصل خطأ غير متوقع" }, { status: 500 });
+    return NextResponse.json(
+      { error: e.userFacing ? e.message : "حصل خطأ مؤقت. حاول تاني بعد شوية." },
+      { status: 500 }
+    );
   }
 }
 
@@ -57,12 +95,18 @@ async function callGemini(prompt) {
 
   if (!res.ok) {
     const errText = await res.text();
-    throw new Error(`فشل تحليل الذكاء الاصطناعي: ${errText.slice(0, 200)}`);
+    const err = new Error(`فشل تحليل الذكاء الاصطناعي: ${errText.slice(0, 200)}`);
+    err.userFacing = true;
+    throw err;
   }
 
   const json = await res.json();
   const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) throw new Error("رد غير متوقع من نموذج التحليل");
+  if (!text) {
+    const err = new Error("رد غير متوقع من نموذج التحليل");
+    err.userFacing = true;
+    throw err;
+  }
 
   return JSON.parse(text);
 }
