@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import NavBar from "../../components/NavBar";
+import EvidencePanel from "../../components/EvidencePanel";
 
 const LABELS = {
   code_quality: "جودة الكود",
@@ -50,22 +51,26 @@ export default async function PublicProfilePage({ params }) {
         )}
 
         {report && (
-          <div className="card">
-            {Object.entries(report.summary?.scores || {}).map(([key, val]) => (
-              <div key={key} style={{ display: "grid", gridTemplateColumns: "130px 1fr 34px", alignItems: "center", gap: 12, marginBottom: 14 }}>
-                <span style={{ fontSize: 13, color: "var(--ink-soft)" }}>{LABELS[key] || key}</span>
-                <div className="bar-track">
-                  <div className="bar-fill" style={{ width: `${val}%` }} />
+          <>
+            <div className="card">
+              {Object.entries(report.summary?.scores || {}).map(([key, val]) => (
+                <div key={key} style={{ display: "grid", gridTemplateColumns: "130px 1fr 34px", alignItems: "center", gap: 12, marginBottom: 14 }}>
+                  <span style={{ fontSize: 13, color: "var(--ink-soft)" }}>{LABELS[key] || key}</span>
+                  <div className="bar-track">
+                    <div className="bar-fill" style={{ width: `${val}%` }} />
+                  </div>
+                  <span className="mono" style={{ fontSize: 12.5, color: "var(--ink-soft)", textAlign: "left" }}>{val}</span>
                 </div>
-                <span className="mono" style={{ fontSize: 12.5, color: "var(--ink-soft)", textAlign: "left" }}>{val}</span>
-              </div>
-            ))}
-            {report.summary?.note && (
-              <p style={{ color: "var(--ink-soft)", fontSize: 14, marginTop: 18, lineHeight: 1.8 }}>
-                {report.summary.note}
-              </p>
-            )}
-          </div>
+              ))}
+              {report.summary?.note && (
+                <p style={{ color: "var(--ink-soft)", fontSize: 14, marginTop: 18, lineHeight: 1.8 }}>
+                  {report.summary.note}
+                </p>
+              )}
+            </div>
+
+            {report.summary?.evidence && <EvidencePanel evidence={report.summary.evidence} />}
+          </>
         )}
       </main>
     </>
