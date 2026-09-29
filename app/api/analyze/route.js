@@ -4,6 +4,8 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 const PER_USER_DAILY_LIMIT = 10;
 const GLOBAL_DAILY_LIMIT = 300;
 const REPO_PATTERN = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
+const CODE_EXT = /\.(js|jsx|ts|tsx|py|java|rb|go|php|cs|cpp|c|kt|swift)$/i;
+const EXCLUDE_PATH = /(node_modules|dist\/|build\/|vendor\/|\.min\.js|package-lock\.json|yarn\.lock)/i;
 
 function userError(message) {
   const err = new Error(message);
@@ -23,7 +25,7 @@ function ghHeaders(accept = "application/vnd.github+json") {
   return headers;
 }
 
-async function getTreePaths(fullName, branch) {
+async function getTreeItems(fullName, branch) {
   try {
     const res = await fetch(
       `https://api.github.com/repos/${fullName}/git/trees/${encodeURIComponent(branch)}?recursive=1`,
@@ -31,7 +33,7 @@ async function getTreePaths(fullName, branch) {
     );
     if (!res.ok) return [];
     const json = await res.json();
-    return (json.tree || []).filter((item) => item.type === "blob").map((item) => item.path);
+    return (json.tree || []).filter((item) => item.type === "blob");
   } catch (e) {
     return [];
   }
@@ -78,10 +80,9 @@ function classifyPaths(paths) {
 
 async function getFrameworksFromPackageJson(fullName) {
   try {
-    const res = await fetch(
-      `https://api.github.com/repos/${fullName}/contents/package.json`,
-      { headers: ghHeaders("application/vnd.github.raw+json") }
-    );
+    const res = await fetch(`https://api.github.com/repos/${fullName}/contents/package.json`, {
+      headers: ghHeaders("application/vnd.github.raw+json"),
+    });
     if (!res.ok) return [];
     const text = await res.text();
     const json = JSON.parse(text);
@@ -109,8 +110,33 @@ async function getCommitStats(fullName) {
   }
 }
 
+async function getSampleFileContents(fullName, items) {
+  const candidates = items
+    .filter((i) => CODE_EXT.test(i.path) && !EXCLUDE_PATH.test(i.path))
+    .sort((a, b) => (b.size || 0) - (a.size || 0))
+    .slice(0, 3);
+
+  const samples = await Promise.all(
+    candidates.map(async (item) => {
+      try {
+        const res = await fetch(`https://api.github.com/repos/${fullName}/contents/${item.path}`, {
+          headers: ghHeaders("application/vnd.github.raw+json"),
+        });
+        if (!res.ok) return null;
+        const content = (await res.text()).slice(0, 2500);
+        return { path: item.path, content };
+      } catch (e) {
+        return null;
+      }
+    })
+  );
+
+  return samples.filter(Boolean);
+}
+
 async function gatherEvidence(repo) {
-  const paths = await getTreePaths(repo.full_name, repo.default_branch);
+  const items = await getTreeItems(repo.full_name, repo.default_branch);
+  const paths = items.map((i) => i.path);
   const classified = classifyPaths(paths);
 
   let frameworks = [];
@@ -119,6 +145,7 @@ async function gatherEvidence(repo) {
   }
 
   const commitStats = await getCommitStats(repo.full_name);
+  const sampleFiles = await getSampleFileContents(repo.full_name, items);
 
   let readme = "";
   try {
@@ -143,8 +170,10 @@ async function gatherEvidence(repo) {
       total_commits_approx: commitStats.totalCommitsApprox,
       language: repo.language,
       stars: repo.stargazers_count,
+      files_sampled: sampleFiles.map((s) => s.path),
     },
     readme,
+    sampleFiles,
   };
 }
 
@@ -199,22 +228,20 @@ export async function POST(request) {
     let reposAnalyzedNames;
 
     if (targetRepo) {
-      // المسار الجديد: تحليل مبني على أدلة حقيقية من المشروع
       const repoRes = await fetch(`https://api.github.com/repos/${targetRepo}`, {
         headers: ghHeaders(),
       });
       if (!repoRes.ok) throw userError("تعذّر جلب المشروع المطلوب");
       const repo = await repoRes.json();
 
-      const { evidence, readme } = await gatherEvidence(repo);
+      const { evidence, readme, sampleFiles } = await gatherEvidence(repo);
 
-      const prompt = buildEvidencePrompt(profile.github_username, repo, evidence, readme);
+      const prompt = buildEvidencePrompt(profile.github_username, repo, evidence, readme, sampleFiles);
       const aiResult = await callGemini(prompt);
 
       scores = { ...aiResult, evidence };
       reposAnalyzedNames = [repo.name];
     } else {
-      // سلوك احتياطي قديم: أحدث 3 مشاريع، بدون جمع أدلة عميقة
       const reposRes = await fetch(
         `https://api.github.com/users/${profile.github_username}/repos?sort=updated&per_page=6`,
         { headers: ghHeaders() }
@@ -265,28 +292,31 @@ export async function POST(request) {
   }
 }
 
-function buildEvidencePrompt(username, repo, evidence, readme) {
-  return `أنت مقيّم تقني محايد ودقيق جدًا. مهم جدًا: لا تخترع أي معلومة غير موجودة في الأدلة تحت. لو نقطة معينة مفيش عليها دليل واضح، وضّح ده في الملاحظة بدل ما تدّي درجة عالية أو منخفضة بلا سبب.
+function buildEvidencePrompt(username, repo, evidence, readme, sampleFiles) {
+  const samplesText = sampleFiles.length
+    ? sampleFiles.map((s) => `--- ملف: ${s.path} ---\n${s.content}`).join("\n\n")
+    : "لم يتم العثور على ملفات كود مناسبة للعرض.";
+
+  return `أنت مقيّم تقني محايد ودقيق جدًا. لا تخترع أي معلومة غير موجودة في الأدلة تحت. لو نقطة معينة مفيش عليها دليل واضح، وضّح ده بدل ما تدّي درجة عشوائية.
 
 معلومات المشروع "${repo.name}" لمطوّر اسمه ${username}:
 
 الوصف: ${repo.description || "لا يوجد"}
 اللغة الأساسية: ${evidence.language || "غير محدد"}
-عدد النجوم: ${evidence.stars}
-عدد الملفات اللي تم فحصها: ${evidence.files_scanned}
-وجود اختبارات: ${evidence.has_tests ? "نعم — أمثلة: " + evidence.test_files_sample.join(", ") : "لا يوجد دليل على اختبارات"}
-وجود CI/CD: ${evidence.has_ci ? "نعم — ملفات: " + evidence.ci_files.join(", ") : "لا يوجد"}
-وجود مجلد توثيق (docs): ${evidence.has_docs_folder ? "نعم" : "لا"}
+عدد الملفات: ${evidence.files_scanned}
+وجود اختبارات: ${evidence.has_tests ? "نعم" : "لا يوجد دليل"}
+وجود CI/CD: ${evidence.has_ci ? "نعم" : "لا"}
 وجود README: ${evidence.has_readme ? "نعم" : "لا"}
-ملفات تبعيات موجودة: ${evidence.dependency_files.join(", ") || "لا يوجد"}
-مكتبات/أطر مكتشفة: ${evidence.frameworks_detected.join(", ") || "غير معروف"}
-تاريخ آخر تحديث (commit): ${evidence.last_commit_date || "غير معروف"}
-عدد الـ commits التقريبي: ${evidence.total_commits_approx ?? "غير معروف"}
+مكتبات مكتشفة: ${evidence.frameworks_detected.join(", ") || "غير معروف"}
+آخر تحديث: ${evidence.last_commit_date || "غير معروف"}
 
-محتوى README (لو موجود):
+محتوى README:
 ${readme || "لا يوجد"}
 
-رجّع تقييمك بصيغة JSON فقط، بدون أي نص إضافي قبله أو بعده، بالشكل ده بالظبط:
+عيّنة من أكبر ملفات الكود الفعلية في المشروع (اقرأها بعناية وحدد أي مشاكل حقيقية فيها):
+${samplesText}
+
+رجّع تقييمك بصيغة JSON فقط، بدون أي نص إضافي، بالشكل ده بالظبط:
 {
   "scores": {
     "code_quality": <رقم من 0 إلى 100>,
@@ -294,55 +324,7 @@ ${readme || "لا يوجد"}
     "security": <رقم من 0 إلى 100>,
     "primary_skill": <رقم من 0 إلى 100>
   },
-  "note": "<فقرة قصيرة بالعربي تشرح كل درجة بناءً على الأدلة الفعلية بس، وتقول صراحة 'بيانات غير كافية للحكم على هذه النقطة' لو مفيش دليل واضح على حاجة معينة (زي الاختبارات مثلاً)>"
-}`;
-}
-
-function buildLegacyPrompt(username, repos) {
-  const repoText = repos
-    .map(
-      (r) =>
-        `### ${r.name}\nاللغة: ${r.language || "غير محدد"} | نجوم: ${r.stars}\nالوصف: ${r.description || "لا يوجد"}\nREADME:\n${r.readme || "لا يوجد README"}`
-    )
-    .join("\n\n");
-
-  return `أنت مقيّم تقني محايد. بناءً على المشاريع دي من حساب GitHub الخاص بمطوّر اسمه ${username}، قيّم مهاراته.
-
-${repoText}
-
-رجّع تقييمك بصيغة JSON فقط، بدون أي نص إضافي قبله أو بعده، بالشكل ده بالظبط:
-{
-  "scores": {
-    "code_quality": <رقم من 0 إلى 100>,
-    "project_structure": <رقم من 0 إلى 100>,
-    "security": <رقم من 0 إلى 100>,
-    "primary_skill": <رقم من 0 إلى 100>
-  },
-  "note": "<جملتين أو ثلاثة بالعربي تلخص نقاط القوة والضعف الرئيسية>"
-}`;
-}
-
-async function callGemini(prompt) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`;
-
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.3, responseMimeType: "application/json" },
-    }),
-  });
-
-  if (!res.ok) {
-    const errText = await res.text();
-    throw userError(`فشل تحليل الذكاء الاصطناعي: ${errText.slice(0, 200)}`);
-  }
-
-  const json = await res.json();
-  const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) throw userError("رد غير متوقع من نموذج التحليل");
-
-  return JSON.parse(text);
-}
+  "issues": [
+    { "file": "<اسم الملف>", "description": "<وصف مشكلة حقيقية وجدتها في الكود ده تحديدًا، بالعربي>" }
+  ],
+  "note": "<فقرة قصيرة تشرح الدرجات بناءً على الأدلة، وتقول 'بيانات غير كافية' لو نقطة
