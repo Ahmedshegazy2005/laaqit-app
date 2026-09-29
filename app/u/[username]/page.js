@@ -62,6 +62,19 @@ export default async function PublicProfilePage({ params }) {
                   <span className="mono" style={{ fontSize: 12.5, color: "var(--ink-soft)", textAlign: "left" }}>{val}</span>
                 </div>
               ))}
+              {report.summary?.issues?.length > 0 && (
+                <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div className="mono" style={{ fontSize: 12.5, color: "#e5654f" }}>
+                    مشاكل محددة اكتشفها التحليل
+                  </div>
+                  {report.summary.issues.map((iss, i) => (
+                    <div key={i} style={{ fontSize: 13.5, color: "var(--ink-soft)", borderInlineStart: "2px solid #e5654f", paddingInlineStart: 10 }}>
+                      <span className="mono" style={{ color: "var(--ink-dim)", fontSize: 11.5 }}>{iss.file}</span>
+                      <div>{iss.description}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
               {report.summary?.note && (
                 <p style={{ color: "var(--ink-soft)", fontSize: 14, marginTop: 18, lineHeight: 1.8 }}>
                   {report.summary.note}
