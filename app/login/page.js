@@ -26,8 +26,11 @@ export default function LoginPage() {
         <h1 style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 24, marginBottom: 12 }}>
           اربط حسابك على لاقط
         </h1>
-        <p style={{ color: "var(--ink-soft)", fontSize: 14.5, marginBottom: 28 }}>
+        <p style={{ color: "var(--ink-soft)", fontSize: 14.5, marginBottom: 16 }}>
           هنقرا اسمك وصورتك بس من GitHub، ونحلل مشاريعك العامة. مش هنعدّل على أي حاجة ومش هنخزّن أي توكن.
+        </p>
+        <p style={{ color: "var(--ink-dim)", fontSize: 12.5, marginBottom: 28, lineHeight: 1.7 }}>
+          هتدخل صفحة موافقة من GitHub نفسه — تأكد إنك بتوافق **بحسابك إنت**. جملة "Laaqit by Ahmedshegazy2005" اللي هتشوفها فوق معناها بس مين عمل الموقع، ملهاش علاقة بتسجيل دخولك.
         </p>
         <button onClick={signInWithGitHub} className="btn btn-signal" style={{ width: "100%", justifyContent: "center" }}>
           سجّل دخول بحساب GitHub
