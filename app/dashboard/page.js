@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import NavBar from "../components/NavBar";
+import EvidencePanel from "../components/EvidencePanel";
 
 const LABELS = {
   code_quality: "جودة الكود",
@@ -60,7 +61,7 @@ export default async function DashboardPage() {
         )}
 
         {report && (
-          <div className="card" style={{ marginBottom: 32 }}>
+          <div className="card" style={{ marginBottom: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
               <h2 style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 20 }}>بطاقة مهاراتك</h2>
               <span className="mono" style={{ fontSize: 12, color: "var(--ink-dim)" }}>
@@ -94,6 +95,8 @@ export default async function DashboardPage() {
             </div>
           </div>
         )}
+
+        {report?.summary?.evidence && <EvidencePanel evidence={report.summary.evidence} />}
       </main>
     </>
   );
