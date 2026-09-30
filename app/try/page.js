@@ -84,6 +84,18 @@ export default function TryPage() {
                 <span className="mono" style={{ fontSize: 12.5, color: "var(--ink-soft)", textAlign: "left" }}>{val}</span>
               </div>
             ))}
+            {result.issues?.length > 0 && (
+              <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 10 }}>
+                <div className="mono" style={{ fontSize: 12.5, color: "#e5654f" }}>
+                  مشاكل محددة اكتشفها التحليل
+                </div>
+                {result.issues.map((iss, i) => (
+                  <div key={i} style={{ fontSize: 13.5, color: "var(--ink-soft)", borderInlineStart: "2px solid #e5654f", paddingInlineStart: 10 }}>
+                    <div>{iss.description}</div>
+                  </div>
+                ))}
+              </div>
+            )}
             {result.note && (
               <p style={{ color: "var(--ink-soft)", fontSize: 14, marginTop: 18, lineHeight: 1.8 }}>{result.note}</p>
             )}
