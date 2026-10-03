@@ -1,5 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <circle cx="50" cy="50" r="48" fill="#12112A"/>
-  <circle cx="50" cy="50" r="30" fill="none" stroke="#2E2B5E" stroke-width="2"/>
-  <circle cx="50" cy="50" r="8" fill="#F2B84B"/>
+  <rect width="100" height="100" rx="22" fill="#12112A"/>
+  <g stroke="#F2B84B" stroke-width="5" stroke-linecap="round" fill="none">
+    <path d="M30 20 H20 V30"/>
+    <path d="M70 20 H80 V30"/>
+    <path d="M80 70 V80 H70"/>
+    <path d="M20 70 V80 H30"/>
+  </g>
+  <circle cx="50" cy="50" r="9" fill="#F2B84B"/>
 </svg>
