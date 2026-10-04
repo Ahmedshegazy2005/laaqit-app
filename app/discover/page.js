@@ -1,6 +1,13 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import NavBar from "../components/NavBar";
 
+const LABELS = {
+  code_quality: "Code quality",
+  project_structure: "Project structure",
+  security: "Security",
+  primary_skill: "Primary skill",
+};
+
 export default async function DiscoverPage() {
   const admin = createAdminClient();
 
@@ -36,8 +43,8 @@ export default async function DiscoverPage() {
                 <div style={{ fontWeight: 600 }}>{r.profiles?.github_username}</div>
               </div>
               {Object.entries(r.summary?.scores || {}).slice(0, 2).map(([key, val]) => (
-                <div key={key} style={{ display: "grid", gridTemplateColumns: "90px 1fr 28px", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                  <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>{key}</span>
+                <div key={key} style={{ display: "grid", gridTemplateColumns: "110px 1fr 28px", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                  <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>{LABELS[key] || key}</span>
                   <div className="bar-track">
                     <div className="bar-fill" style={{ width: `${val}%` }} />
                   </div>
