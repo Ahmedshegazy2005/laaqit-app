@@ -25,7 +25,7 @@ export default async function SelectRepoPage() {
     if (!res.ok) throw new Error();
     repos = (await res.json()).filter((r) => !r.fork);
   } catch (e) {
-    fetchError = "تعذّر جلب مشاريعك من GitHub. حاول تاني بعد شوية.";
+    fetchError = "Couldn't fetch your repos from GitHub. Try again in a bit.";
   }
 
   return (
@@ -33,16 +33,16 @@ export default async function SelectRepoPage() {
       <NavBar />
       <main className="wrap" style={{ paddingTop: 48, paddingBottom: 80, maxWidth: 720 }}>
         <h1 style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 24, marginBottom: 10 }}>
-          اختار المشروع اللي عايز تحلله
+          Pick a project to analyze
         </h1>
         <p style={{ color: "var(--ink-soft)", fontSize: 14.5, marginBottom: 32 }}>
-          هنحلل المشروع ده بس بالذكاء الاصطناعي ونبني بطاقة مهارات بناءً عليه.
+          We'll analyze just this project with AI and build a skill card based on it.
         </p>
 
         {fetchError && <div className="card">{fetchError}</div>}
 
         {!fetchError && repos.length === 0 && (
-          <div className="card">مفيش مشاريع عامة في حساب GitHub بتاعك حاليًا.</div>
+          <div className="card">No public repos found on your GitHub account right now.</div>
         )}
 
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -52,7 +52,7 @@ export default async function SelectRepoPage() {
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 16 }}>{r.name}</div>
                   <div style={{ color: "var(--ink-soft)", fontSize: 13.5, marginTop: 4 }}>
-                    {r.description || "بدون وصف"}
+                    {r.description || "No description"}
                   </div>
                   <div className="mono" style={{ color: "var(--ink-dim)", fontSize: 12, marginTop: 6 }}>
                     {r.language || "—"} · ⭐ {r.stargazers_count}
