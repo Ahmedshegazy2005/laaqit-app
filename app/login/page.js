@@ -21,19 +21,19 @@ export default function LoginPage() {
     <main className="wrap" style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div className="card" style={{ maxWidth: 420, width: "100%", textAlign: "center" }}>
         <div className="mono" style={{ color: "var(--signal)", fontSize: 13, marginBottom: 16 }}>
-          تسجيل الدخول
+          Sign in
         </div>
         <h1 style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 24, marginBottom: 12 }}>
-          اربط حسابك على لاقط
+          Connect your account to Laaqit
         </h1>
         <p style={{ color: "var(--ink-soft)", fontSize: 14.5, marginBottom: 16 }}>
-          هنقرا اسمك وصورتك بس من GitHub، ونحلل مشاريعك العامة. مش هنعدّل على أي حاجة ومش هنخزّن أي توكن.
+          We only read your name and avatar from GitHub, and analyze your public repos. We never modify anything, and we don't store any token.
         </p>
         <p style={{ color: "var(--ink-dim)", fontSize: 12.5, marginBottom: 28, lineHeight: 1.7 }}>
-          هتدخل صفحة موافقة من GitHub نفسه — تأكد إنك بتوافق **بحسابك إنت**. جملة "Laaqit by Ahmedshegazy2005" اللي هتشوفها فوق معناها بس مين عمل الموقع، ملهاش علاقة بتسجيل دخولك.
+          You'll land on a GitHub consent screen — make sure you're authorizing with **your own account**. The line "Laaqit by Ahmedshegazy2005" you'll see there just means who built the app, it has nothing to do with which account you're signing in with.
         </p>
         <button onClick={signInWithGitHub} className="btn btn-signal" style={{ width: "100%", justifyContent: "center" }}>
-          سجّل دخول بحساب GitHub
+          Sign in with GitHub
         </button>
       </div>
     </main>
