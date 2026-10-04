@@ -4,10 +4,10 @@ import NavBar from "../../components/NavBar";
 import EvidencePanel from "../../components/EvidencePanel";
 
 const LABELS = {
-  code_quality: "جودة الكود",
-  project_structure: "بنية المشروع",
-  security: "أمان وثغرات",
-  primary_skill: "المهارة الأساسية",
+  code_quality: "Code quality",
+  project_structure: "Project structure",
+  security: "Security",
+  primary_skill: "Primary skill",
 };
 
 export default async function PublicProfilePage({ params }) {
@@ -41,20 +41,20 @@ export default async function PublicProfilePage({ params }) {
           <div>
             <div style={{ fontWeight: 700, fontSize: 22 }}>{profile.github_username}</div>
             <div className="mono" style={{ color: "var(--ink-dim)", fontSize: 13 }}>
-              بطاقة مهارات — لاقط
+              Skill card — Laaqit
             </div>
           </div>
         </div>
 
         {!report && (
-          <div className="card">لسه المطوّر ده ما حللش مشاريعه.</div>
+          <div className="card">This developer hasn't analyzed any projects yet.</div>
         )}
 
         {report && (
           <>
             <div className="card">
               {Object.entries(report.summary?.scores || {}).map(([key, val]) => (
-                <div key={key} style={{ display: "grid", gridTemplateColumns: "130px 1fr 34px", alignItems: "center", gap: 12, marginBottom: 14 }}>
+                <div key={key} style={{ display: "grid", gridTemplateColumns: "150px 1fr 34px", alignItems: "center", gap: 12, marginBottom: 14 }}>
                   <span style={{ fontSize: 13, color: "var(--ink-soft)" }}>{LABELS[key] || key}</span>
                   <div className="bar-track">
                     <div className="bar-fill" style={{ width: `${val}%` }} />
@@ -62,10 +62,11 @@ export default async function PublicProfilePage({ params }) {
                   <span className="mono" style={{ fontSize: 12.5, color: "var(--ink-soft)", textAlign: "left" }}>{val}</span>
                 </div>
               ))}
+
               {report.summary?.issues?.length > 0 && (
                 <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 10 }}>
                   <div className="mono" style={{ fontSize: 12.5, color: "#e5654f" }}>
-                    مشاكل محددة اكتشفها التحليل
+                    Specific issues found
                   </div>
                   {report.summary.issues.map((iss, i) => (
                     <div key={i} style={{ fontSize: 13.5, color: "var(--ink-soft)", borderInlineStart: "2px solid #e5654f", paddingInlineStart: 10 }}>
@@ -75,6 +76,7 @@ export default async function PublicProfilePage({ params }) {
                   ))}
                 </div>
               )}
+
               {report.summary?.note && (
                 <p style={{ color: "var(--ink-soft)", fontSize: 14, marginTop: 18, lineHeight: 1.8 }}>
                   {report.summary.note}
