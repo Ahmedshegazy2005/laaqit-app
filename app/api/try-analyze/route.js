@@ -24,7 +24,7 @@ export async function POST(request) {
   const code = (body.code || "").toString().slice(0, MAX_CHARS);
 
   if (code.trim().length < 30) {
-    return NextResponse.json({ error: "الكود قصير جدًا عشان نحلله." }, { status: 400 });
+    return NextResponse.json({ error: "Code is too short to analyze." }, { status: 400 });
   }
 
   try {
@@ -33,7 +33,7 @@ export async function POST(request) {
     const personCount = await hit(admin, getPersonBucket(request));
     if (personCount > PER_PERSON_DAILY_LIMIT) {
       return NextResponse.json(
-        { error: "وصلت للحد اليومي للتجربة السريعة (5 مرات). ارجع بكرة، أو سجّل دخول وحلّل مشروع من GitHub." },
+        { error: "You've hit today's quick-try limit (5). Come back tomorrow, or sign in and analyze a real GitHub project." },
         { status: 429 }
       );
     }
@@ -41,7 +41,7 @@ export async function POST(request) {
     const globalCount = await hit(admin, "global");
     if (globalCount > GLOBAL_DAILY_LIMIT) {
       return NextResponse.json(
-        { error: "التجربة السريعة وصلت لحدها اليومي عند كل المستخدمين. ارجع بكرة." },
+        { error: "Quick-try analysis has hit its daily limit across all users. Come back tomorrow." },
         { status: 429 }
       );
     }
@@ -51,35 +51,35 @@ export async function POST(request) {
   } catch (e) {
     console.error(e);
     return NextResponse.json(
-      { error: e.userFacing ? e.message : "حصل خطأ مؤقت. حاول تاني بعد شوية." },
+      { error: e.userFacing ? e.message : "A temporary error occurred. Try again in a bit." },
       { status: 500 }
     );
   }
 }
 
 function buildPrompt(code) {
-  return `أنت مقيّم تقني محايد. قيّم مقتطف الكود ده اللي لصقه مستخدم لتجربة سريعة (من غير سياق مشروع كامل)، واقرأه بعناية عشان تحدد أي مشاكل حقيقية فيه.
+  return `You are a neutral technical reviewer. Assess this code snippet pasted by a user for a quick try (no full project context), and read it carefully to flag any real issues.
 
-الكود:
+Code:
 \`\`\`
 ${code}
 \`\`\`
 
-رجّع تقييمك بصيغة JSON فقط، بدون أي نص إضافي، بالشكل ده بالظبط:
+Respond in JSON only, in English, exactly in this shape:
 {
   "scores": {
-    "code_quality": <رقم من 0 إلى 100>,
-    "project_structure": <رقم من 0 إلى 100>,
-    "security": <رقم من 0 إلى 100>,
-    "primary_skill": <رقم من 0 إلى 100>
+    "code_quality": <number 0-100>,
+    "project_structure": <number 0-100>,
+    "security": <number 0-100>,
+    "primary_skill": <number 0-100>
   },
   "issues": [
-    { "file": "الكود الملصوق", "description": "<وصف مشكلة حقيقية وجدتها في الكود ده تحديدًا، بالعربي>" }
+    { "file": "Pasted code", "description": "<a real issue you found in this code, in English>" }
   ],
-  "note": "<جملتين أو ثلاثة بالعربي تلخص نقاط القوة والضعف، وتوضح إن ده تقييم أولي على مقتطف بس>"
+  "note": "<two or three sentences in English summarizing strengths and weaknesses, noting this is a quick assessment of a snippet only>"
 }
 
-مهم: "issues" لازم تكون مشاكل حقيقية شفتها في الكود بس، مش تخمين. لو مفيش مشاكل واضحة، رجّع مصفوفة فاضية [].`;
+Important: "issues" must be real problems you found in the code, never guesses. If there are no clear issues, return an empty array [].`;
 }
 
 async function callGemini(prompt) {
@@ -97,7 +97,7 @@ async function callGemini(prompt) {
 
   if (!res.ok) {
     const errText = await res.text();
-    const err = new Error(`فشل تحليل الذكاء الاصطناعي: ${errText.slice(0, 200)}`);
+    const err = new Error(`AI analysis failed: ${errText.slice(0, 200)}`);
     err.userFacing = true;
     throw err;
   }
@@ -105,7 +105,7 @@ async function callGemini(prompt) {
   const json = await res.json();
   const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!text) {
-    const err = new Error("رد غير متوقع من نموذج التحليل");
+    const err = new Error("Unexpected response from the analysis model");
     err.userFacing = true;
     throw err;
   }
