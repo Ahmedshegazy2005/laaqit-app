@@ -5,10 +5,10 @@ import NavBar from "../components/NavBar";
 import EvidencePanel from "../components/EvidencePanel";
 
 const LABELS = {
-  code_quality: "جودة الكود",
-  project_structure: "بنية المشروع",
-  security: "أمان وثغرات",
-  primary_skill: "المهارة الأساسية",
+  code_quality: "Code quality",
+  project_structure: "Project structure",
+  security: "Security",
+  primary_skill: "Primary skill",
 };
 
 export default async function DashboardPage() {
@@ -43,7 +43,7 @@ export default async function DashboardPage() {
               {profile?.github_username || user.email}
             </div>
             <div className="mono" style={{ color: "var(--ink-dim)", fontSize: 13 }}>
-              لوحة المطوّر
+              Developer dashboard
             </div>
           </div>
         </div>
@@ -51,26 +51,26 @@ export default async function DashboardPage() {
         {!report && (
           <div className="card" style={{ marginBottom: 32 }}>
             <h2 style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 20, marginBottom: 10 }}>
-              لسه ما حللناش مشاريعك
+              No analysis yet
             </h2>
             <p style={{ color: "var(--ink-soft)", fontSize: 14.5, marginBottom: 22 }}>
-              اختار مشروع من مشاريعك على GitHub وهنحلله بالذكاء الاصطناعي ونبني بطاقة مهارات حقيقية ليك.
+              Pick one of your GitHub projects and we'll analyze it with AI and build a real skill card for you.
             </p>
-            <Link href="/dashboard/select-repo" className="btn btn-signal">اختار مشروع تحلله</Link>
+            <Link href="/dashboard/select-repo" className="btn btn-signal">Pick a project to analyze</Link>
           </div>
         )}
 
         {report && (
           <div className="card" style={{ marginBottom: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-              <h2 style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 20 }}>بطاقة مهاراتك</h2>
+              <h2 style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 20 }}>Your skill card</h2>
               <span className="mono" style={{ fontSize: 12, color: "var(--ink-dim)" }}>
-                آخر تحليل: {new Date(report.analyzed_at).toLocaleDateString("ar-EG")}
+                Last analyzed: {new Date(report.analyzed_at).toLocaleDateString("en-US")}
               </span>
             </div>
 
             {Object.entries(report.summary?.scores || {}).map(([key, val]) => (
-              <div key={key} style={{ display: "grid", gridTemplateColumns: "130px 1fr 34px", alignItems: "center", gap: 12, marginBottom: 14 }}>
+              <div key={key} style={{ display: "grid", gridTemplateColumns: "150px 1fr 34px", alignItems: "center", gap: 12, marginBottom: 14 }}>
                 <span style={{ fontSize: 13, color: "var(--ink-soft)" }}>{LABELS[key] || key}</span>
                 <div className="bar-track">
                   <div className="bar-fill" style={{ width: `${val}%` }} />
@@ -78,10 +78,11 @@ export default async function DashboardPage() {
                 <span className="mono" style={{ fontSize: 12.5, color: "var(--ink-soft)", textAlign: "left" }}>{val}</span>
               </div>
             ))}
+
             {report.summary?.issues?.length > 0 && (
               <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 10 }}>
                 <div className="mono" style={{ fontSize: 12.5, color: "var(--danger, #e5654f)" }}>
-                  مشاكل محددة اكتشفها التحليل
+                  Specific issues found
                 </div>
                 {report.summary.issues.map((iss, i) => (
                   <div key={i} style={{ fontSize: 13.5, color: "var(--ink-soft)", borderInlineStart: "2px solid #e5654f", paddingInlineStart: 10 }}>
@@ -91,6 +92,7 @@ export default async function DashboardPage() {
                 ))}
               </div>
             )}
+
             {report.summary?.note && (
               <p style={{ color: "var(--ink-soft)", fontSize: 14, marginTop: 18, lineHeight: 1.8 }}>
                 {report.summary.note}
@@ -98,10 +100,10 @@ export default async function DashboardPage() {
             )}
 
             <div style={{ marginTop: 24, display: "flex", gap: 12, flexWrap: "wrap" }}>
-              <Link href="/dashboard/select-repo" className="btn btn-signal">حلّل مشروع تاني</Link>
+              <Link href="/dashboard/select-repo" className="btn btn-signal">Analyze another project</Link>
               {profile?.github_username && (
                 <Link href={`/u/${profile.github_username}`} className="btn btn-scout" target="_blank">
-                  شارك بطاقتك 🔗
+                  Share your card 🔗
                 </Link>
               )}
             </div>
