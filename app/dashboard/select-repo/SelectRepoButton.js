@@ -18,7 +18,7 @@ export default function SelectRepoButton({ repoFullName }) {
         body: JSON.stringify({ repo: repoFullName }),
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "حصل خطأ");
+      if (!res.ok) throw new Error(json.error || "Something went wrong");
       router.push("/dashboard");
       router.refresh();
     } catch (e) {
@@ -30,7 +30,7 @@ export default function SelectRepoButton({ repoFullName }) {
   return (
     <div>
       <button onClick={runAnalysis} disabled={loading} className="btn btn-signal" style={{ width: "100%", justifyContent: "center" }}>
-        {loading ? "جاري التحليل…" : "حلّل المشروع ده"}
+        {loading ? "Analyzing…" : "Analyze this project"}
       </button>
       {errorMsg && (
         <div className="mono" style={{ color: "#e5654f", fontSize: 12.5, marginTop: 8 }}>
