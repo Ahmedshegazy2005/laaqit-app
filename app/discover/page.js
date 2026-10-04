@@ -15,14 +15,14 @@ export default async function DiscoverPage() {
       <NavBar />
       <main className="wrap" style={{ paddingTop: 48, paddingBottom: 80 }}>
         <h1 style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 28, marginBottom: 8 }}>
-          اكتشف مطورين
+          Discover developers
         </h1>
         <p style={{ color: "var(--ink-soft)", marginBottom: 36 }}>
-          مطورين اتحلل الكود بتاعهم فعليًا على لاقط، مرتبين من الأحدث تحليلًا.
+          Developers whose code has been analyzed on Laaqit, newest first.
         </p>
 
         {(!reports || reports.length === 0) && (
-          <div className="card">لسه مفيش مطورين اتحللوا. ارجع بعد شوية.</div>
+          <div className="card">No developers analyzed yet. Check back soon.</div>
         )}
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 18 }}>
