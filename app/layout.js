@@ -1,5 +1,5 @@
 import "./globals.css";
-import { Analytics } from "@vercel/analytics/react";
+
 
 export const metadata = {
   title: "Laaqit — AI-Powered Developer Skill Analysis",
@@ -11,7 +11,7 @@ export default function RootLayout({ children }) {
     <html lang="en" dir="ltr">
       <body>
         {children}
-        <Analytics />
+       
       </body>
     </html>
   );
