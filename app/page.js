@@ -1,26 +1,63 @@
 import Link from "next/link";
-import NavBar from "./components/NavBar";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import PostComposer from "./PostComposer";
 
-export default function HomePage() {
+export default async function SocialPage() {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: posts } = await supabase
+    .from("posts")
+    .select("id, content, created_at, profile_id, profiles(id, display_name, github_username, avatar_url)")
+    .order("created_at", { ascending: false })
+    .limit(50);
+
   return (
-    <main>
-      <NavBar />
-
-      <section className="wrap" style={{ padding: "80px 0 60px", maxWidth: 720 }}>
-        <div className="mono" style={{ color: "var(--signal)", fontSize: 13, marginBottom: 18 }}>
-          Completely free · no credit card
-        </div>
-        <h1 style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "clamp(32px,5vw,50px)", lineHeight: 1.2, marginBottom: 22 }}>
-          What's your real coding level?
-        </h1>
-        <p style={{ color: "var(--ink-soft)", fontSize: 18, lineHeight: 1.75, marginBottom: 32 }}>
-          Connect your GitHub and let AI analyze your actual projects — code quality, project structure, and areas to improve — then get a real skill card you can share with anyone.
-        </p>
-        <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
-          <Link href="/try" className="btn btn-signal">Try it free, no signup</Link>
-          <Link href="/login" className="btn btn-ghost">Sign in with GitHub</Link>
-        </div>
-      </section>
+    <main className="wrap" style={{ paddingTop: 28, paddingBottom: 80 }}>
+      <div className="social-topbar">
+        <Link href="/" className="brand">لاقط</Link>
+        <nav>
+          <Link href="/social">المجتمع</Link>
+          <Link href="/dashboard">التحليل</Link>
+          <Link href={`/profile/${user.id}`}>ملفي</Link>
+          <Link href="/settings">الإعدادات</Link>
+        </nav>
+      </div>
+      <div className="social-grid">
+        <aside className="card social-side">
+          <Link href={`/profile/${user.id}`} className="profile-mini">
+            <Avatar src={user.user_metadata?.avatar_url} name={user.user_metadata?.user_name || "مستخدم"} size={54} />
+            <div><strong>{user.user_metadata?.user_name || "حسابي"}</strong><small>عرض الملف الشخصي</small></div>
+          </Link>
+          <Link className="side-link" href="/settings">⚙ إعدادات الحساب</Link>
+          <Link className="side-link" href="/dashboard">▣ بطاقة المهارات</Link>
+        </aside>
+        <section>
+          <PostComposer />
+          <div style={{ display: "grid", gap: 14, marginTop: 18 }}>
+            {(posts || []).map((post) => <PostCard key={post.id} post={post} own={post.profile_id === user.id} />)}
+            {!posts?.length && <div className="card empty">لسه مفيش منشورات. اكتب أول منشور ليك.</div>}
+          </div>
+        </section>
+      </div>
     </main>
   );
+}
+
+function Avatar({ src, name, size = 48 }) {
+  return src ? <img className="avatar" src={src} alt="" width={size} height={size} style={{ width: size, height: size }} /> : <div className="avatar avatar-fallback" style={{ width: size, height: size }}>{(name || "؟").slice(0, 1).toUpperCase()}</div>;
+}
+
+function PostCard({ post, own }) {
+  const p = post.profiles || {};
+  return <article className="card post-card">
+    <div className="post-head">
+      <Avatar src={p.avatar_url} name={p.display_name || p.github_username} />
+      <div><Link href={`/profile/${p.id}`}>{p.display_name || p.github_username || "مستخدم"}</Link><small>{new Date(post.created_at).toLocaleString("ar-EG")}</small></div>
+      {own && <span className="post-own">منشوري</span>}
+    </div>
+    <p className="post-content">{post.content}</p>
+  </article>;
 }
