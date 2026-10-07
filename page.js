@@ -8,6 +8,7 @@ export default function HomePage() {
           <div style={{ fontWeight: 700, fontSize: 19 }}>لاقط</div>
           <div style={{ display: "flex", gap: 10 }}>
             <Link href="/discover" className="btn btn-ghost">اكتشف مطورين</Link>
+            <Link href="/social" className="btn btn-ghost">المجتمع</Link>
             <Link href="/login" className="btn btn-signal">سجّل دخول</Link>
           </div>
         </div>
